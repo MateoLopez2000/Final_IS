@@ -46,15 +46,16 @@ public interface FlumptoAPI {
     @FormUrlEncoded
     @POST("submitorder.php")
     Call<String> submitOrder(@Field("orderPrice") float orderPrice,
-                           @Field("orderDetail") String orderDetail,
-                           @Field("orderAddress") String orderAddress,
-                           @Field("userPhone") String userPhone,
+                             @Field("orderDetail") String orderDetail,
+                             @Field("latitude") double latitude,
+                             @Field("longitude") double longitude,
+                             @Field("userPhone") String userPhone,
                              @Field("NIT")String NIT);
     @GET("getallproducts.php")
     Observable<List<Product>> getAllProducts();
 
-    @FormUrlEncoded
+    /*@FormUrlEncoded
     @POST("braintree/checkout.php")
     Call<String> payment(@Field("nonce") String nonce,
-                             @Field("amount") String amount);
+                             @Field("amount") String amount);*/
 }

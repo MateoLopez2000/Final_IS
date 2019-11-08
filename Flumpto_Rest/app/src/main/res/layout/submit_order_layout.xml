@@ -13,32 +13,13 @@
         android:inputType="number"
         android:layout_width="match_parent"
        android:layout_height="wrap_content" />
-    <RadioGroup
-        android:orientation="horizontal"
-        android:weightSum="2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <RadioButton
-            android:id="@+id/rdi_user_address"
-            android:text="Dirección del usuario"
-            android:checked="true"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content" />
-        <RadioButton
-            android:id="@+id/rdi_other_address"
-            android:text="Otra Dirección"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/btn_address"
+        android:layout_width="250dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Dirección">
 
+    </Button>
 
-
-    </RadioGroup>
-    <EditText
-        android:id="@+id/edt_other_address"
-        android:hint="Dirección"
-        android:enabled="false"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 </LinearLayout>

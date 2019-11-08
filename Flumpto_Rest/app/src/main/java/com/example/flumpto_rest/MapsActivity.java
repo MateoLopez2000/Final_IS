@@ -4,9 +4,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -31,14 +35,25 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    String latitude;
+    String longitude;
 
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationCallback locationCallback;
     LocationRequest locationRequest;
 
+   Button btn_done;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
+
+
+
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -75,6 +90,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Toast.makeText(MapsActivity.this, "Permiso Denegado", Toast.LENGTH_SHORT).show();
                     }
                 }).check();
+        btn_done = (Button)findViewById(R.id.btn_done);
+        btn_done.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                 String Latitude = latitude;
+                 String Longitude = longitude;
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("Latitude", Latitude);
+                returnIntent.putExtra("Longitude", Longitude);
+                setResult(Activity.RESULT_OK,returnIntent);
+                finish();
+            }
+        });
 
     }
 
@@ -82,16 +112,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     {
         locationCallback = new LocationCallback(){
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(final LocationResult locationResult) {
                 super.onLocationResult(locationResult);
+
 
                 // Add a marker in yor Location and move the camera
                 LatLng your_location = new LatLng(locationResult.getLastLocation().getLatitude(),locationResult.getLastLocation().getLongitude());
+                latitude = String.valueOf(locationResult.getLastLocation().getLatitude());
+                longitude =String.valueOf(locationResult.getLastLocation().getLongitude());
                 mMap.addMarker(new MarkerOptions().position(your_location).title("Tu Ubicación"));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(your_location,17.0f));
             }
         };
     }
+
 
     private void buildLocationRequest()
     {
@@ -130,4 +164,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
+
 }

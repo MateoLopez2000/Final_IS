@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import androidx.annotation.Nullable;
 
+import com.example.flumpto_rest.Firebase.Location;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,16 +25,14 @@ import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.braintreepayments.api.dropin.DropInActivity;
-import com.braintreepayments.api.dropin.DropInRequest;
-import com.braintreepayments.api.dropin.DropInResult;
-import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.example.flumpto_rest.Adapter.CartAdapter;
 import com.example.flumpto_rest.Database.ModelDB.Cart;
 import com.example.flumpto_rest.Retrofit.FlumptoAPI;
 import com.example.flumpto_rest.Utils.Common;
 import com.example.flumpto_rest.Utils.RecycleItemTouchHelper;
 import com.example.flumpto_rest.Utils.RecyclerItemTouchHelperListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
@@ -53,6 +53,11 @@ import retrofit2.Response;
 
 public class CartActivity extends AppCompatActivity  implements RecyclerItemTouchHelperListener {
 
+    double Latitude;
+    double Longitude;
+    DatabaseReference reff;
+    Location location;
+
     RecyclerView recycler_cart;
     Button btn_place_order;
     CompositeDisposable compositeDisposable;
@@ -67,12 +72,12 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
 
     //String Global
 
-    String token;
+  /*  String token;
     String amount;
     String orderAddress;
     String NIT;
     HashMap<String,String> params;
-    private static final int PATMENT_REQUEST_CODE = 7777;
+    private static final int PATMENT_REQUEST_CODE = 7777;*/
 
 
     @Override
@@ -82,6 +87,8 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
         mService = Common.getAPI();
         mServicesScalars = Common.getScalarsAPI();
         compositeDisposable = new CompositeDisposable();
+        reff = FirebaseDatabase.getInstance().getReference().child("Location");
+        location = new  Location();
 
 
 
@@ -91,6 +98,7 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
 
         ItemTouchHelper.SimpleCallback simpleCallback = new RecycleItemTouchHelper(0,ItemTouchHelper.LEFT,this );
                 new ItemTouchHelper(simpleCallback).attachToRecyclerView(recycler_cart);
+
 
         btn_place_order = (Button)findViewById(R.id.btn_place_order);
         btn_place_order.setOnClickListener(new View.OnClickListener() {
@@ -103,10 +111,10 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
         rootLayout = (RelativeLayout)findViewById(R.id.rootLayout);
 
         loadCartItems();
-        loadToken();
+     //   loadToken();
     }
 
-    private void loadToken() {
+ /*  private void loadToken() {
 
         final android.app.AlertDialog waitingDialog = new SpotsDialog(CartActivity.this);
         waitingDialog.show();
@@ -128,7 +136,7 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
                      btn_place_order.setEnabled(true);
             }
         });
-    }
+    }*/
 
     private void placeOrder() {
         // Crear dialog
@@ -137,12 +145,22 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
         View submit_order_layout = LayoutInflater.from(this).inflate(R.layout.submit_order_layout, null);
 
          final EditText edt_NIT =(EditText)submit_order_layout.findViewById(R.id.edt_NIT);
-         final EditText edt_other_address =(EditText)submit_order_layout.findViewById(R.id.edt_other_address);
+     /*    final EditText edt_other_address =(EditText)submit_order_layout.findViewById(R.id.edt_other_address);
 
          final RadioButton rdi_user_address = (RadioButton)submit_order_layout.findViewById(R.id.rdi_user_address);
-         final RadioButton rdi_other_address = (RadioButton)submit_order_layout.findViewById(R.id.rdi_other_address);
+         final RadioButton rdi_other_address = (RadioButton)submit_order_layout.findViewById(R.id.rdi_other_address);*/
 
-         rdi_user_address.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+         final Button btn_address = (Button)submit_order_layout.findViewById(R.id.btn_address);
+
+         btn_address.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                    Intent intent = new Intent(CartActivity.this,MapsActivity.class);
+                 startActivityForResult(intent,1);
+             }
+         }) ;builder.setView(submit_order_layout);
+
+     /*    rdi_user_address.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
        @Override
        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
            if(isChecked) {
@@ -156,7 +174,8 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
          if(isChecked) {
              edt_other_address.setEnabled(true);
          }}
- });builder.setView(submit_order_layout);
+
+ });builder.setView(submit_order_layout);*/
         builder.setNegativeButton("CANCELAR", new DialogInterface.OnClickListener() {
      @Override
      public void onClick(DialogInterface dialog, int which) {
@@ -165,20 +184,33 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
  }).setPositiveButton("SUBIR", new DialogInterface.OnClickListener() {
      @Override
      public void onClick(DialogInterface dialog, int which) {
-         NIT = edt_NIT.getText().toString();
-        // final String orderAddress;
-         if (rdi_user_address.isChecked()){
 
-             orderAddress = Common.currentUser.getAddress();}
-         else if (rdi_other_address.isChecked()){
-             orderAddress = edt_other_address.getText().toString();}
-         else{
-             orderAddress = "";}
+
+         final String NIT = edt_NIT.getText().toString();
+         final double latitude = Latitude;
+         final double longitude = Longitude;
+        // final String orderAddress;
+
 
          //Pago
-         DropInRequest dropInRequest = new DropInRequest().clientToken(token);
+       /*  DropInRequest dropInRequest = new DropInRequest().clientToken(token);
          startActivityForResult(dropInRequest.getIntent(CartActivity.this),PATMENT_REQUEST_CODE);
-
+*/
+         compositeDisposable.add(
+                 Common.cartRepository.getCartItems()
+                         .observeOn(AndroidSchedulers.mainThread())
+                         .subscribeOn(Schedulers.io())
+                         .subscribe(new Consumer<List<Cart>>() {
+                             @Override
+                             public void accept(List<Cart> carts) throws Exception {
+                                 if (!TextUtils.isEmpty(String.valueOf(latitude))){
+                                     sendOrdertoServer(Common.cartRepository.sumPrice(), carts, latitude, longitude,NIT);
+                                     sendorderFirebase();}
+                                 else
+                                 {Toast.makeText(CartActivity.this, "La Dirección no puede ser vacia", Toast.LENGTH_SHORT).show();}
+                             }
+                         })
+         );
 
 
 
@@ -187,7 +219,7 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
      builder.show();
     }
 
-    @Override
+   /* @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
        if (requestCode == PATMENT_REQUEST_CODE)
        {
@@ -219,9 +251,9 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
                Log.e("EDMT ERROR",error.getMessage());
            }
        }
-}
+}*/
 
-    private void sendPayment() {
+   /* private void sendPayment() {
         mServicesScalars.payment(params.get("nonce"),params.get("amount"))
                 .enqueue(new Callback<String>() {
                     @Override
@@ -230,20 +262,7 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
                         {
                             Toast.makeText(CartActivity.this,"Transacción completada exitosamenete", Toast.LENGTH_SHORT).show();
                             //Subir Orden
-                            compositeDisposable.add(
-                                    Common.cartRepository.getCartItems()
-                                            .observeOn(AndroidSchedulers.mainThread())
-                                            .subscribeOn(Schedulers.io())
-                                            .subscribe(new Consumer<List<Cart>>() {
-                                                @Override
-                                                public void accept(List<Cart> carts) throws Exception {
-                                                    if (!TextUtils.isEmpty(orderAddress)){
-                                                        sendOrdertoServer(Common.cartRepository.sumPrice(), carts, orderAddress,NIT);}
-                                                    else
-                                                    {Toast.makeText(CartActivity.this, "La Dirección no puede ser vacia", Toast.LENGTH_SHORT).show();}
-                                                }
-                                            })
-                            );
+
                         }
                         else
                         {
@@ -258,12 +277,14 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
                     }
                 });
     }
-
-    private void sendOrdertoServer(float sumprice, List<Cart> carts, String orderAddress, String NIT) {
+*/
+    private void sendOrdertoServer(float sumprice, List<Cart> carts, Double latitude, Double longitude, String NIT) {
         if(carts.size() > 0)
         {
             String orderDetail = new Gson().toJson(carts);
-            mService.submitOrder(sumprice,orderDetail,orderAddress,Common.currentUser.getPhone(),NIT)
+
+
+            mService.submitOrder(sumprice,orderDetail,latitude,longitude,Common.currentUser.getPhone(),NIT)
                     .enqueue(new Callback<String>() {
                         @Override
                         public void onResponse(Call<String> call, Response<String> response) {
@@ -320,6 +341,8 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
         loadCartItems();
     }
 
+
+
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if(viewHolder instanceof CartAdapter.CartViewHolder)
@@ -348,5 +371,24 @@ public class CartActivity extends AppCompatActivity  implements RecyclerItemTouc
 
 
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode ==1 )
+        {
+
+        Latitude = Double.parseDouble(data.getStringExtra("Latitude"));
+        Longitude = Double.parseDouble(data.getStringExtra("Longitude"));
+
+    }
+
+    }
+    public void sendorderFirebase()
+    {
+        location.setLat(Latitude);
+        location.setLongit(Longitude);
+        reff.child("location1").setValue(location);
+
     }
 }

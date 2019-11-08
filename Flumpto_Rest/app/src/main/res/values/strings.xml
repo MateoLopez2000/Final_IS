@@ -1,6 +1,6 @@
 <resources>
 
-    <string name="app_name">Flumpto</string>
+    <string name="app_name">YaNoMas</string>
     <string name="FACEBOOK_APP_ID">354670555194103</string>
     <string name="ACCOUNT_KIT_CLIENT_TOKEN">ce81893711980d0d01f98845dc886b9e</string>
     <string name="title_activity_home">HomeActivity</string>
