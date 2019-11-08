@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar color='schedulers'>
+    <ion-title>Login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content padding>
+  <div class="center">
+        <app-logo></app-logo>
+        <h1>Sign In</h1>
+  </div>
+
+  
+      <ion-item>
+        <ion-label position="stacked" id ="lemail">Email</ion-label>
+        <ion-input [(ngModel)]="user.email" type="text" ></ion-input>
+      </ion-item>
+
+      <ion-item>
+          <ion-label position="stacked" id ="lpass">Password</ion-label>
+          <ion-input [(ngModel)]="user.password" type="password" ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <a routerLink='/signup'>Create account</a>
+        </ion-item>
+        <ion-button expand="block" shape='round' color='greens' (click)="login()">Sign In</ion-button>
+        
+    
+</ion-content>
