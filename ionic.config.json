@@ -1,0 +1,8 @@
+{
+  "name": "YaNoMas",
+  "integrations": {
+    "cordova": {},
+    "capacitor": {}
+  },
+  "type": "angular"
+}
